@@ -1,0 +1,89 @@
+>>> import nltk
+>>> import nltk.tokenize
+>>> from nltk.tokenize import sent_tokenize, word_tokenize
+>>> from nltk.corpus import brown
+
+#1 Search the web for "spoof newspaper headlines", to find such gems as: British Left Waffles on Falkland Islands, and Juvenile Court to Try Shooting Defendant. 
+#Manually tag these headlines to see if knowledge of the part-of-speech tags removes the ambiguity.
+
+>>> text = word_tokenize('British Left Waffles on Falkland Islands')
+>>> nltk.pos_tag(text)
+[('British', 'JJ'), ('Left', 'NNP'), ('Waffles', 'NNP'), ('on', 'IN'), ('Falkland', 'NNP'), ('Islands', 'NNP')]
+
+#"left waffles" - "a vague talk of the Left wing" ambiguity reduced
+
+#3 Tokenize and tag the following sentence: They wind back the clock, while we chase after the wind. What different pronunciations and parts of speech are involved?
+
+>>> text = word_tokenize('They wind back the clock, while we chase after the wind')
+>>> nltk.pos_tag(text)
+[('They', 'PRP'), ('wind', 'VBP'), ('back', 'RB'), ('the', 'DT'), ('clock', 'NN'), (',', ','), ('while', 'IN'), ('we', 'PRP'), ('chase', 'VBP'), ('after', 'IN'), ('the', 'DT'), ('wind', 'NN')]
+
+# 'wind' - 'VBP' and 'NN'; 'chase'- 'VBP'
+
+#5. Using the Python interpreter in interactive mode, experiment with the dictionary examples in this chapter. Create a dictionary d, and add some entries. What happens
+whether you try to access a non-existent entry, e.g., d['xyz']?
+
+#6 Try deleting an element from a dictionary d, using the syntax del d['abc']. Check that the item was deleted.
+>>> d = {}
+>>> d['abc'] = 'A'
+>>> d['bcd'] = 'B'
+>>> d['cde'] = 'C'
+>>> d
+{'abc': 'A', 'bcd': 'B', 'cde': 'C'}
+>>> del d['abc']
+>>> d
+{'bcd': 'B', 'cde': 'C'}
+>>> d['xyz']
+Traceback (most recent call last):
+  File "<pyshell#18>", line 1, in <module>
+    d['xyz']
+KeyError: 'xyz'
+
+#7 Create two dictionaries, d1 and d2, and add some entries to each. Now issue the command d1.update(d2). What did this do? What might it be useful for?
+>>> d2 = {}
+>>> d2['aa'] = 'AA'
+>>> d2['bb'] = 'BB'
+>>> d2['cde'] = 'CC'
+>>> d.update(d2)
+>>> d
+{'bcd': 'B', 'cde': 'CC', 'aa': 'AA', 'bb': 'BB'}
+
+#update() method adds element(s) to the dictionary if the key is not in the dictionary. If the key is in the dictionary, it updates the key with the new value.
+# You can add a new key-value pair, update multiple key value pairs at a time.
+
+#10 Train a unigram tagger and run it on some new text. Observe that some words are not assigned a tag. Why not?
+>>> brown_tagged_sents = brown.tagged_sents(categories='news')
+>>> brown_sents = brown.sents(categories='news')
+>>> unigram_tagger = nltk.UnigramTagger(brown_tagged_sents)
+>>>  tt = 'What is the upper limit to the performance of an n-gram tagger'
+>>> tokens = tt.split()
+>>> unigram_tagger.tag(tokens)
+[('What', 'WDT'), ('is', 'BEZ'), ('the', 'AT'), ('upper', 'JJ'), ('limit', 'NN'), ('to', 'TO'), ('the', 'AT'), ('performance', 'NN'), ('of', 'IN'), ('an', 'AT'), ('n-gram', None), ('tagger', None)]
+
+#new words, that were not among the trained data were assigned "None" tag
+
+#11 Learn about the affix tagger (type help(nltk.AffixTagger)). Train an affix tagger and run it on some new text. Experiment with different settings for the affix length
+and the minimum word length. Discuss your findings. 
+>>> affix_tagger = nltk.AffixTagger(brown_tagged_sents, affix_length=-2, min_stem_length=3)
+>>> text = 'See if you can come up with patterns to improve the performance of the above regular expression tagger'.split()
+>>> affix_tagger.tag(text)
+[('See', None), ('if', None), ('you', None), ('can', None), ('come', None), ('up', None), ('with', None), ('patterns', 'NNS'), ('to', None), ('improve', 'JJ'), ('the', None), ('performance', 'NN'), ('of', None), ('the', None), ('above', 'JJ'), ('regular', 'JJ'), ('expression', 'NN'), ('tagger', 'NN')]
+>>> affix_tagger = nltk.AffixTagger(brown_tagged_sents, affix_length=-2, min_stem_length=3)
+>>> affix_tagger.tag(text)
+[('See', None), ('if', None), ('you', None), ('can', None), ('come', None), ('up', None), ('with', None), ('patterns', 'NNS-TL'), ('to', None), ('improve', 'VB'), ('the', None), ('performance', 'NN'), ('of', None), ('the', None), ('above', None), ('regular', 'JJ'), ('expression', 'NN'), ('tagger', 'NN')]
+
+#12. Train a bigram tagger with no backoff tagger, and run it on some of the training data. Next, run it on some new data. What happens to the performance of the tagger? Why?
+#Separating the Training and Testing Data:
+>>> size = int(len(brown_tagged_sents) * 0.9)
+>>> train_sents = brown_tagged_sents[:size]
+>>> test_sents = brown_tagged_sents[size:]
+
+>>> bigram_tagger = nltk.BigramTagger(train_sents)
+>>> bigram_tagger.tag(brown_sents[2009])
+[('The', 'AT'), ('structures', 'NNS'), ('housing', 'VBG'), ('the', 'AT'), ('apartments', 'NNS'), ('are', 'BER'), ('of', 'IN'), ('masonry', 'NN'), ('and', 'CC'), ('frame', 'NN'), ('construction', 'NN'), ('.', '.')]
+>>> new_sent = 'See if you can come up with patterns to improve the performance of the above regular expression tagger'.split()
+>>> bigram_tagger.tag(new_sent)
+[('See', None), ('if', None), ('you', None), ('can', None), ('come', None), ('up', None), ('with', None), ('patterns', None), ('to', None), ('improve', None), ('the', None), ('performance', None), ('of', None), ('the', None), ('above', None), ('regular', None), ('expression', None), ('tagger', None)]
+# there were no such words pairs in the train data and the bigram tagger cannot identify the words it saw in combination with words tagged as 'None'
+
+#14. Use sorted() and set() to get a sorted list of tags used in the Brown corpus, removing duplicates.
