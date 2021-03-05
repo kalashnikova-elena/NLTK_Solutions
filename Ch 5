@@ -87,3 +87,33 @@ and the minimum word length. Discuss your findings.
 # there were no such words pairs in the train data and the bigram tagger cannot identify the words it saw in combination with words tagged as 'None'
 
 #14. Use sorted() and set() to get a sorted list of tags used in the Brown corpus, removing duplicates.
+>>> list1 = sorted(set([tag for (_, tag) in brown.tagged_words()]))
+>>> list1
+["'", "''", '(', '(-HL', ')', ')-HL', '*', '*-HL', '*-NC', '*-TL', ',', ',-HL', ',-NC', ',-TL', '--', '---HL', '.', '.-HL', '.-NC', '.-TL', ':', ':-HL', ':-TL', 'ABL', 'ABN', 'ABN-HL', 'ABN-NC', 'ABN-TL', 'ABX', 'AP', 'AP$', 'AP+AP-NC', 'AP-HL'
+
+#15. Write programs to process the Brown Corpus and find answers to the following questions:
+a. Which nouns are more common in their plural form, rather than their singular form? (Only consider regular plurals, formed with the -s suffix.)
+b. Which word has the greatest number of distinct tags? What are they, and what do they represent?
+c. List tags in order of decreasing frequency. What do the 20 most frequent tags represent?
+d. Which tags are nouns most commonly found after? What do these tags represent?
+# Which nouns are more common in their plural form, rather than their singular
+form? ???
+>>> pl_n = nltk.FreqDist(brown_tagged)
+>>> [w[0] for (w,_) in pl_n.most_common() if w[1] == 'NNS']
+
+# List tags in order of decreasing frequency. What do the 20 most frequent tags represent?
+>>> list2 = [tag for (_, tag) in brown.tagged_words()]
+>>> fd = nltk.FreqDist(list2)
+>>> fd.most_common(20)
+[('NN', 152470), ('IN', 120557), ('AT', 97959), ('JJ', 64028), ('.', 60638), (',', 58156), ('NNS', 55110), ('CC', 37718), ('RB', 36464), ('NP', 34476), ('VB', 33693), ('VBN', 29186), ('VBD', 26167), ('CS', 22143), ('PPS', 18253), ('VBG', 17893), ('PP$', 16872), ('TO', 14918), ('PPSS', 13802), ('CD', 13510)]
+
+# Which tags are nouns most commonly found after? What do these tags represent? (done in book)
+	
+>>> word_tag_pairs = nltk.bigrams(brown_news_tagged)
+>>> noun_preceders = [a[1] for (a, b) in word_tag_pairs if b[1] == 'NOUN']
+>>> fdist = nltk.FreqDist(noun_preceders)
+>>> [tag for (tag, _) in fdist.most_common()]
+['NOUN', 'DET', 'ADJ', 'ADP', '.', 'VERB', 'CONJ', 'NUM', 'ADV', 'PRT', 'PRON', 'X']
+>>> sorted(set(noun_followers))
+['.', 'ADJ', 'ADP', 'ADV', 'CONJ', 'DET', 'NOUN', 'NUM', 'PRON', 'PRT', 'VERB', 'X']
+
