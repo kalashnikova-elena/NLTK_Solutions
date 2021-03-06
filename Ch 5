@@ -124,8 +124,33 @@ would be preferable to minimize memory usage, or to maximize performance with no
 
 The tagger performance will increase with the increase of the model size. In order to balance memory and performance, use a 90% performance = 8000-9000 model size. 
 
-#17
-#18 
+#17. What is the upper limit of performance for a lookup tagger, assuming no limit to the size of its table? 
+(Hint: write a program to work out what percentage of tokens of a word are assigned the most likely tag for that word, on average.)
+
+>>> brown_tagged_sents = brown.tagged_sents(categories='news')
+>>> fd = nltk.FreqDist(brown.words(categories='news'))
+>>> cfd = nltk.ConditionalFreqDist(brown.tagged_words(categories='news'))
+>>> likely_tags = dict((word, cfd[word].max()) for word in fd.keys())
+>>> baseline_tagger = nltk.UnigramTagger(model=likely_tags)
+>>> baseline_tagger.evaluate(brown_tagged_sents)
+0.9349006503968017
+
+#18. Generate some statistics for tagged data to answer the following questions:
+What proportion of word types are always assigned the same part-of-speech tag?
+How many words are ambiguous, in the sense that they appear with at least two tags?
+What percentage of word tokens in the Brown Corpus involve these ambiguous words?
+
+>>> corpus = brown.words(categories='news')
+>>> cfd = nltk.ConditionalFreqDist(brown.tagged_words(categories='news'))
+>>> same_pos = [w for w in cfd.conditions() if len(cfd[w]) == 1]
+>>> print(len(same_pos)/len(cfd.conditions()))
+0.8802973461164374
+>>> ambi_pos = [w for w in cfd.conditions() if len(cfd[w]) > 1]
+>>> print(len(ambi_pos)
+1723
+>>> tokens = [w for w in corpus if w in ambi_pos]
+>>> print(len(tokens)/len(corpus))
+0.5808421345744575
 
 #19. The evaluate() method works out how accurately the tagger performs on this text. For example, if the supplied tagged text was [('the', 'DT'), ('dog', 'NN')] and the tagger produced the output [('the', 'NN'), ('dog', 'NN')] , then the score would be 0.5 . Let's try to figure out how the evaluation method works:
 a. A tagger t takes a list of words as input, and produces a list of tagged words as output. However, t.evaluate() is given correctly tagged text as its only parameter. What must it do with this input before performing the tagging?
@@ -151,14 +176,14 @@ b.
 >>> [w for w in cfd1.conditions() if 'NN2' in cfd1[w] and 'VVZ' in cfd1[w]]
 
 c. 
->>> def frr(sentence):
+>>> def prep_phrase(sentence):
 	for (w1,t1), (w2,t2), (w3,t3) in nltk.trigrams(sentence):
 		if (t1 == ('IN') and t2.startswith('A') and t3.startswith('N')):
 			print(w1, w2, w3)
 
 			
 >>> for tagged_sent in brown.tagged_sents():
-	frr(tagged_sent)
+	prep_phrase(tagged_sent)
 	
 of the election
 of the City
@@ -175,12 +200,11 @@ d.  masc = ['he', 'him', 'his', 'himself']
 
 #21 In Table 3-1, we saw a table involving frequency counts for the verbs adore, love, like, and prefer, and preceding qualifiers such as really. Investigate the full range
 of qualifiers (Brown tag QL) that appear before these four verbs. 
->>> brown_tagged_words = brown.tagged_words(tagset='universal')
+>>> brown_tagged_words = brown.tagged_words()
 >>> bigrams = nltk.bigrams(brown_tagged_words)
 >>> verbs = ['adore', 'love', 'prefer', 'like']
->>> ql = set([w1[0] for w1, w2 in bigrams if w2[0] in verbs and w1[1] == 'ADV'])
+>>> ql = set([w1[0] for w1, w2 in bigrams if w2[0] in verbs and w1[1] == 'QL'])
 >>> print(ql)
-{'less', 'simply', 'even', 'increasingly', 'just', 'quick', 'often', 'spontaneously', 'together', 'more', 'roughly', 'How', 'Not', 'wildly', 'Kinda', 'quite', 'exactly', 'particularly', 'Just', 'here', 'More', 'somewhat', 'gloriously', 'rather', 'dearly', 'around', 'sure', 'so', 'Jist', 'abreast', 'deceptively', 'jist', 'generally', 'close', 'there', 'by', 'remarkably', 'almost', 'alone', 'yet', 'not', 'much', 'always'}
 
 #22
 
