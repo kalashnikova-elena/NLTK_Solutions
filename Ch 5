@@ -92,22 +92,22 @@ and the minimum word length. Discuss your findings.
 ["'", "''", '(', '(-HL', ')', ')-HL', '*', '*-HL', '*-NC', '*-TL', ',', ',-HL', ',-NC', ',-TL', '--', '---HL', '.', '.-HL', '.-NC', '.-TL', ':', ':-HL', ':-TL', 'ABL', 'ABN', 'ABN-HL', 'ABN-NC', 'ABN-TL', 'ABX', 'AP', 'AP$', 'AP+AP-NC', 'AP-HL'
 
 #15. Write programs to process the Brown Corpus and find answers to the following questions:
-a. Which nouns are more common in their plural form, rather than their singular form? (Only consider regular plurals, formed with the -s suffix.)
-b. Which word has the greatest number of distinct tags? What are they, and what do they represent?
-c. List tags in order of decreasing frequency. What do the 20 most frequent tags represent?
-d. Which tags are nouns most commonly found after? What do these tags represent?
-# Which nouns are more common in their plural form, rather than their singular
-form? ???
->>> pl_n = nltk.FreqDist(brown_tagged)
->>> [w[0] for (w,_) in pl_n.most_common() if w[1] == 'NNS']
 
-# List tags in order of decreasing frequency. What do the 20 most frequent tags represent?
+b. Which word has the greatest number of distinct tags? What are they, and what do they represent?
+
+a. Which nouns are more common in their plural form, rather than their singular
+form? ???(Only consider regular plurals, formed with the -s suffix.)
+>>> brown_tagged_words = brown.tagged_words()
+>>> cfd = nltk.ConditionalFreqDist(brown_tagged_words)
+>>> pl_list = [w for w in cfd.conditions() if cfd[w]['NNS'] > cfd[w]['NN']]
+
+c. List tags in order of decreasing frequency. What do the 20 most frequent tags represent?
 >>> list2 = [tag for (_, tag) in brown.tagged_words()]
 >>> fd = nltk.FreqDist(list2)
 >>> fd.most_common(20)
 [('NN', 152470), ('IN', 120557), ('AT', 97959), ('JJ', 64028), ('.', 60638), (',', 58156), ('NNS', 55110), ('CC', 37718), ('RB', 36464), ('NP', 34476), ('VB', 33693), ('VBN', 29186), ('VBD', 26167), ('CS', 22143), ('PPS', 18253), ('VBG', 17893), ('PP$', 16872), ('TO', 14918), ('PPSS', 13802), ('CD', 13510)]
 
-# Which tags are nouns most commonly found after? What do these tags represent? (done in book)
+d. Which tags are nouns most commonly found after? What do these tags represent? (done in book)
 	
 >>> word_tag_pairs = nltk.bigrams(brown_news_tagged)
 >>> noun_preceders = [a[1] for (a, b) in word_tag_pairs if b[1] == 'NOUN']
@@ -116,4 +116,72 @@ form? ???
 ['NOUN', 'DET', 'ADJ', 'ADP', '.', 'VERB', 'CONJ', 'NUM', 'ADV', 'PRT', 'PRON', 'X']
 >>> sorted(set(noun_followers))
 ['.', 'ADJ', 'ADP', 'ADV', 'CONJ', 'DET', 'NOUN', 'NUM', 'PRON', 'PRT', 'VERB', 'X']
+
+#16. Explore the following issues that arise in connection with the lookup tagger:
+a. What happens to the tagger performance for the various model sizes when a backoff tagger is omitted?
+b. Consider the curve in Figure 5-4; suggest a good size for a lookup tagger that balances memory and performance. Can you come up with scenarios where it
+would be preferable to minimize memory usage, or to maximize performance with no regard for memory usage?
+
+The tagger performance will increase with the increase of the model size. In order to balance memory and performance, use a 90% performance = 8000-9000 model size. 
+
+#17
+#18 
+
+#19. The evaluate() method works out how accurately the tagger performs on this text. For example, if the supplied tagged text was [('the', 'DT'), ('dog', 'NN')] and the tagger produced the output [('the', 'NN'), ('dog', 'NN')] , then the score would be 0.5 . Let's try to figure out how the evaluation method works:
+a. A tagger t takes a list of words as input, and produces a list of tagged words as output. However, t.evaluate() is given correctly tagged text as its only parameter. What must it do with this input before performing the tagging?
+the input should be tagged with the tagging model
+b.Once the tagger has created newly tagged text, how might the evaluate() method go about comparing it with the original tagged text and computing the accuracy score?
+the tagger model is campared with the correctly tagged text:the number of correct predictions made is devided by the total number of predictions made
+
+20. Write code to search the Brown Corpus for particular words and phrases according to tags, to answer the following questions:
+a. Produce an alphabetically sorted list of the distinct words tagged as MD. 
+b. Identify words that can be plural nouns or third person singular verbs (e.g. deals, flies).
+c. Identify three-word prepositional phrases of the form IN + DET + NN (eg. in the lab).
+What is the ratio of masculine to feminine pronouns?
+
+a.
+>>> wsj = nltk.corpus.treebank.tagged_words()
+>>> cfd2 = nltk.ConditionalFreqDist((tag, word) for (word, tag) in wsj)
+>>> list(sorted(cfd2['MD']))
+["'d", "'ll", 'Can', 'Could', 'ca', 'can', 'could', 'may', 'might', 'must', 'ought', 'shall', 'should', 'will', 'wo', 'would']
+
+b.
+>>> wsj = nltk.corpus.treebank.tagged_words()
+>>> cfd1 = nltk.ConditionalFreqDist(wsj)
+>>> [w for w in cfd1.conditions() if 'NN2' in cfd1[w] and 'VVZ' in cfd1[w]]
+
+c. 
+>>> def frr(sentence):
+	for (w1,t1), (w2,t2), (w3,t3) in nltk.trigrams(sentence):
+		if (t1 == ('IN') and t2.startswith('A') and t3.startswith('N')):
+			print(w1, w2, w3)
+
+			
+>>> for tagged_sent in brown.tagged_sents():
+	frr(tagged_sent)
+	
+of the election
+of the City
+for the manner
+in the election
+to the end
+
+d.  masc = ['he', 'him', 'his', 'himself']
+>>> fem = ['she', 'her', 'hers', 'herself']
+>>> masc_list = [w for w in brown.words() if w.lower() in masc]
+>>> fem_list = [w for w in brown.words() if w.lower() in fem]
+>>> print(len(masc_list)/len(fem_list))
+3.2741427861520624
+
+#21 In Table 3-1, we saw a table involving frequency counts for the verbs adore, love, like, and prefer, and preceding qualifiers such as really. Investigate the full range
+of qualifiers (Brown tag QL) that appear before these four verbs. 
+>>> brown_tagged_words = brown.tagged_words(tagset='universal')
+>>> bigrams = nltk.bigrams(brown_tagged_words)
+>>> verbs = ['adore', 'love', 'prefer', 'like']
+>>> ql = set([w1[0] for w1, w2 in bigrams if w2[0] in verbs and w1[1] == 'ADV'])
+>>> print(ql)
+{'less', 'simply', 'even', 'increasingly', 'just', 'quick', 'often', 'spontaneously', 'together', 'more', 'roughly', 'How', 'Not', 'wildly', 'Kinda', 'quite', 'exactly', 'particularly', 'Just', 'here', 'More', 'somewhat', 'gloriously', 'rather', 'dearly', 'around', 'sure', 'so', 'Jist', 'abreast', 'deceptively', 'jist', 'generally', 'close', 'there', 'by', 'remarkably', 'almost', 'alone', 'yet', 'not', 'much', 'always'}
+
+#22
+
 
