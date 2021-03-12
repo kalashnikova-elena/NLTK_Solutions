@@ -1,8 +1,7 @@
 >>> import nltk
 >>> import nltk.tokenize
 >>> from nltk.tokenize import sent_tokenize, word_tokenize
->>> from nltk.corpus import brown
->>> from nltk.corpus import names
+>>> from nltk.corpus import brown, names
 >>> import random
 
 
@@ -33,3 +32,78 @@ names = ([(name, 'male') for name in names.words('male.txt')] +
 >>> classifier = nltk.NaiveBayesClassifier.train(train_set)
 >>> print(nltk.classify.accuracy(classifier, devtest_set))
 0.78890625
+
+#3
+>>>from nltk.corpus import senseval
+>>> instances = senseval.instances('hard.pos')
+>>> size = int(len(instances) * 0.1)
+>>> train_set, test_set = instances[size:], instances[:size]
+
+>>> def sense_f(instance):
+	 features = {'prev_word': instance.context[-1],
+		     'prev_word_tag': instance.context[-1],
+		     'next_word': instance.context[+1],
+		     'next_word_tag': instance.context[+1]}
+	 return features
+	 
+>>> train = [(sense_f(instance), instance.senses) for instance in train_set]
+>>> test = [(sense_f(instance), instance.senses) for instance in test_set]
+>>> classifier = nltk.NaiveBayesClassifier.train(train)
+>>> print (nltk.classify.accuracy(classifier, test))
+0.8822170900692841
+
+№4. Using the movie review document classifier discussed in this chapter, generate a list of the 30 features that the classifier finds to be most informative. 
+Can you explain why these particular features are informative? Do you find any of them surprising?
+
+>>> random.shuffle(documents)
+>>> all_words = nltk.FreqDist(w.lower() for w in movie_reviews.words())
+>>> word_features = list(all_words)[:2000]
+
+>>> def document_features(document):
+	document_words = set(document)
+	features = {}
+	for word in word_features:
+		features['contains({})'.format(word)] = (word in document_words)
+	return features
+
+>>> featuresets = [(document_features(d), c) for (d,c) in documents]
+>>> train_set, test_set = featuresets[100:], featuresets[:100]
+>>> classifier = nltk.NaiveBayesClassifier.train(train_set)
+>>> print(nltk.classify.accuracy(classifier, test_set))
+0.78
+>>> classifier.show_most_informative_features(30)
+Most Informative Features
+     contains(atrocious) = True              neg : pos    =     11.1 : 1.0
+ contains(unimaginative) = True              neg : pos    =      8.4 : 1.0
+    contains(schumacher) = True              neg : pos    =      7.5 : 1.0
+        contains(shoddy) = True              neg : pos    =      7.1 : 1.0
+        contains(turkey) = True              neg : pos    =      6.6 : 1.0
+          contains(mena) = True              neg : pos    =      6.4 : 1.0
+        contains(suvari) = True              neg : pos    =      6.4 : 1.0
+        contains(wasted) = True              neg : pos    =      6.2 : 1.0
+           contains(ugh) = True              neg : pos    =      5.8 : 1.0
+     contains(underwood) = True              neg : pos    =      5.7 : 1.0
+    contains(ridiculous) = True              neg : pos    =      5.7 : 1.0
+       contains(unravel) = True              pos : neg    =      5.6 : 1.0
+    contains(uninspired) = True              neg : pos    =      5.4 : 1.0
+         contains(awful) = True              neg : pos    =      5.1 : 1.0
+        contains(welles) = True              neg : pos    =      5.0 : 1.0
+  contains(surveillance) = True              neg : pos    =      5.0 : 1.0
+        contains(canyon) = True              neg : pos    =      5.0 : 1.0
+          contains(oops) = True              neg : pos    =      5.0 : 1.0
+        contains(poorly) = True              neg : pos    =      5.0 : 1.0
+        contains(sorrow) = True              pos : neg    =      5.0 : 1.0
+       contains(singers) = True              pos : neg    =      5.0 : 1.0
+         contains(waste) = True              neg : pos    =      4.9 : 1.0
+       contains(miscast) = True              neg : pos    =      4.8 : 1.0
+        contains(sexist) = True              neg : pos    =      4.6 : 1.0
+        contains(justin) = True              neg : pos    =      4.6 : 1.0
+      contains(explores) = True              pos : neg    =      4.5 : 1.0
+      contains(everyday) = True              pos : neg    =      4.4 : 1.0
+         contains(bland) = True              neg : pos    =      4.4 : 1.0
+         contains(kudos) = True              pos : neg    =      4.4 : 1.0
+         contains(moody) = True              pos : neg    =      4.4 : 1.0
+
+
+#quite correctly indicated words that have positive/negative connotation based on the doccument the data was trained. 
+
